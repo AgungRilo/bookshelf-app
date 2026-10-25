@@ -49,10 +49,21 @@ Server berjalan di `http://localhost:8080`.
 
 | Variable       | Keterangan                                                 | Default             |
 |----------------|------------------------------------------------------------|---------------------|
-| `DATABASE_URL` | Connection string PostgreSQL (dipakai di Railway)          | -                   |
+| `DATABASE_URL` | Connection string PostgreSQL (Neon / Railway). Jika diisi, `DB_*` diabaikan | -                   |
 | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_SSLMODE` | Dipakai jika `DATABASE_URL` kosong | `localhost`, `5432`, `postgres`, kosong, `bookshelf_db`, `disable` |
 | `JWT_SECRET`   | Secret untuk menandatangani token                          | `rahasia-bookshelf` |
 | `PORT`         | Port server                                                | `8080`              |
+
+## Koneksi ke Neon (PostgreSQL Cloud)
+
+1. Buat project di [neon.tech](https://neon.tech), lalu buka **Connect** dan copy connection string-nya.
+2. Isi ke `.env`:
+   ```env
+   DATABASE_URL=postgresql://user:password@ep-xxxx.region.aws.neon.tech/neondb?sslmode=require
+   ```
+3. Jalankan `go run .`. Tabel dan user default dibuat otomatis oleh migrasi.
+
+> Connection string dari Neon biasanya berakhiran `&channel_binding=require`. Parameter ini tidak didukung driver `lib/pq`, jadi aplikasi otomatis membuangnya. Koneksi tetap terenkripsi lewat `sslmode=require`.
 
 ## Autentikasi
 
@@ -155,9 +166,11 @@ Kolom `thickness` **tidak** dikirim dari JSON, tetapi dihitung otomatis dari `to
 
 1. Push repository ini ke GitHub.
 2. Di Railway: **New Project → Deploy from GitHub repo**, pilih repo ini (Railway akan build memakai `Dockerfile`).
-3. Tambahkan database: **New → Database → PostgreSQL**.
+3. Siapkan database, pilih salah satu:
+   - **Neon**: pakai connection string dari Neon.
+   - **PostgreSQL Railway**: **New → Database → PostgreSQL**.
 4. Di service aplikasi, buka **Variables** lalu tambahkan:
-   - `DATABASE_URL` = `${{Postgres.DATABASE_URL}}`
+   - `DATABASE_URL` = connection string Neon, atau `${{Postgres.DATABASE_URL}}` jika memakai PostgreSQL Railway
    - `JWT_SECRET` = string acak yang panjang
 5. Buka **Settings → Networking → Generate Domain** untuk mendapatkan URL publik.
 

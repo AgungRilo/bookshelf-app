@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"time"
 
@@ -19,9 +20,22 @@ func GetEnv(key, fallback string) string {
 	return fallback
 }
 
+// cleanDatabaseURL membuang parameter channel_binding (bawaan connection string Neon)
+// karena tidak didukung lib/pq, koneksi tetap aman lewat sslmode=require
+func cleanDatabaseURL(dsn string) string {
+	u, err := url.Parse(dsn)
+	if err != nil {
+		return dsn
+	}
+	q := u.Query()
+	q.Del("channel_binding")
+	u.RawQuery = q.Encode()
+	return u.String()
+}
+
 func ConnectDatabase() {
-	// DATABASE_URL (Railway) diutamakan, selain itu pakai DB_*
-	dsn := os.Getenv("DATABASE_URL")
+	// DATABASE_URL (Neon / Railway) diutamakan, selain itu pakai DB_*
+	dsn := cleanDatabaseURL(os.Getenv("DATABASE_URL"))
 	if dsn == "" {
 		dsn = fmt.Sprintf("host='%s' port='%s' user='%s' password='%s' dbname='%s' sslmode='%s'",
 			GetEnv("DB_HOST", "localhost"),
