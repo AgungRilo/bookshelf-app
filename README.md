@@ -2,6 +2,23 @@
 
 REST API untuk mengelola data **buku** dan **kategori**-nya. Dibuat dengan Go (Gin), PostgreSQL, migrasi menggunakan `sql-migrate`, dan autentikasi **JSON Web Token (JWT)**.
 
+## Base URL
+
+| Environment | URL                                                     |
+|-------------|---------------------------------------------------------|
+| Production  | https://bookshelf-app-9399e.containers.snapdeploy.app   |
+| Lokal       | http://localhost:8080                                   |
+
+Semua endpoint berada di bawah `/api`, contoh: `https://bookshelf-app-9399e.containers.snapdeploy.app/api/books`.
+
+Coba login langsung ke production:
+
+```bash
+curl -X POST https://bookshelf-app-9399e.containers.snapdeploy.app/api/users/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123"}'
+```
+
 ## Tech Stack
 
 - [Gin](https://github.com/gin-gonic/gin): HTTP framework
@@ -49,7 +66,7 @@ Server berjalan di `http://localhost:8080`.
 
 | Variable       | Keterangan                                                 | Default             |
 |----------------|------------------------------------------------------------|---------------------|
-| `DATABASE_URL` | Connection string PostgreSQL (Neon / Railway). Jika diisi, `DB_*` diabaikan | -                   |
+| `DATABASE_URL` | Connection string PostgreSQL (Neon). Jika diisi, `DB_*` diabaikan | -                   |
 | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_SSLMODE` | Dipakai jika `DATABASE_URL` kosong | `localhost`, `5432`, `postgres`, kosong, `bookshelf_db`, `disable` |
 | `JWT_SECRET`   | Secret untuk menandatangani token                          | `rahasia-bookshelf` |
 | `PORT`         | Port server                                                | `8080`              |
@@ -162,16 +179,19 @@ Kolom `thickness` **tidak** dikirim dari JSON, tetapi dihitung otomatis dari `to
 
 > Catatan: di dokumen desain, `modified_by` tertulis `timestamp`. Di project ini kolom tersebut memakai `varchar` karena isinya username yang mengubah data, sama seperti `created_by`.
 
-## Deploy ke Railway
+## Deploy ke SnapDeploy
+
+Project ini di-deploy di [SnapDeploy](https://snapdeploy.app) dengan database PostgreSQL dari [Neon](https://neon.tech).
+
+URL production: https://bookshelf-app-9399e.containers.snapdeploy.app
+
+Langkah deploy:
 
 1. Push repository ini ke GitHub.
-2. Di Railway: **New Project → Deploy from GitHub repo**, pilih repo ini (Railway akan build memakai `Dockerfile`).
-3. Siapkan database, pilih salah satu:
-   - **Neon**: pakai connection string dari Neon.
-   - **PostgreSQL Railway**: **New → Database → PostgreSQL**.
-4. Di service aplikasi, buka **Variables** lalu tambahkan:
-   - `DATABASE_URL` = connection string Neon, atau `${{Postgres.DATABASE_URL}}` jika memakai PostgreSQL Railway
+2. Di SnapDeploy, buat aplikasi baru dari repository GitHub ini. Aplikasi di-build memakai `Dockerfile` yang ada di root project.
+3. Tambahkan environment variable:
+   - `DATABASE_URL` = connection string dari Neon
    - `JWT_SECRET` = string acak yang panjang
-5. Buka **Settings → Networking → Generate Domain** untuk mendapatkan URL publik.
+4. Deploy. Setelah selesai, SnapDeploy memberikan domain publik untuk aplikasi.
 
 Migrasi berjalan otomatis saat aplikasi start, jadi tidak perlu menjalankan SQL manual.

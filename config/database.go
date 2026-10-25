@@ -34,7 +34,7 @@ func cleanDatabaseURL(dsn string) string {
 }
 
 func ConnectDatabase() {
-	// DATABASE_URL (Neon / Railway) diutamakan, selain itu pakai DB_*
+	// DATABASE_URL (Neon) diutamakan, selain itu pakai DB_*
 	dsn := cleanDatabaseURL(os.Getenv("DATABASE_URL"))
 	if dsn == "" {
 		dsn = fmt.Sprintf("host='%s' port='%s' user='%s' password='%s' dbname='%s' sslmode='%s'",
